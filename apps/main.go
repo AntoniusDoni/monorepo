@@ -2,47 +2,81 @@ package main
 
 import (
 	"log"
+	"os"
+	"strings"
 
 	"github.com/antoniusDoni/monorepo/config"
 	"github.com/antoniusDoni/monorepo/core"
+	auth "github.com/antoniusDoni/monorepo/core/auth"
 	dbpkg "github.com/antoniusDoni/monorepo/core/db"
 	Seeder "github.com/antoniusDoni/monorepo/core/db/seeder"
+	modules "github.com/antoniusDoni/monorepo/modules"
+	"github.com/antoniusDoni/monorepo/modules/warehouse/handler"
+	wrepo "github.com/antoniusDoni/monorepo/modules/warehouse/repository"
+	wservice "github.com/antoniusDoni/monorepo/modules/warehouse/service"
 	"github.com/antoniusDoni/monorepo/shared/repository"
 	"github.com/antoniusDoni/monorepo/shared/routes"
 	"github.com/antoniusDoni/monorepo/shared/service"
-	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 )
 
 func main() {
-	// Load .env file if exists
-	if err := godotenv.Load(); err != nil {
-		log.Println("Warning: .env file not found or failed to load")
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatal("Failed to load config:", err)
 	}
 
-	// Load config (e.g. DB config, JWT secret)
-	cfg := config.LoadConfig()
-
-	// Initialize DB instance
 	dbInstance, err := dbpkg.GetInstance()
 	if err != nil {
-		log.Fatal("Failed to get DB instance:", err)
+		log.Fatal("Failed to connect DB:", err)
 	}
 
-	// Seed initial data (optional)
 	Seeder.Seed(dbInstance)
 
-	// Initialize user repository and auth service
+	// Initialize shared repositories/services
 	userRepo := repository.NewUserRepository(dbInstance)
 	authService := service.NewAuthService(userRepo, cfg.JwtSecret)
 
-	// Initialize Echo
+	modCtx := modules.ModuleContext{
+		DB:          dbInstance,
+		UserRepo:    userRepo,
+		AuthService: authService,
+	}
+
 	e := echo.New()
 	e.Validator = core.NewValidator()
+	// Register shared routes like login, register, and middleware
+	routes.Register(e, authService, dbInstance, cfg.JwtSecret, cfg.AuthMode)
 
-	// Register all shared routes, injecting auth service, DB, JWT secret and auth mode
-	routes.Register(e, authService, dbInstance, cfg.JwtSecret, "jwt")
+	enabledModules := []handler.RouteRegistrar{}
 
-	// Start server
+	enabled := map[string]bool{}
+	for _, m := range strings.Split(os.Getenv("ENABLE_MODULES"), ",") {
+		enabled[strings.TrimSpace(m)] = true
+	}
+
+	if enabled["warehouse"] {
+		// Create warehouse repo with shared DB
+		whRepo := wrepo.NewWarehouseRepository(modCtx.DB)
+
+		// Create warehouse service with warehouse repo
+		whService := wservice.NewWarehouseService(whRepo)
+
+		// Create handler with service
+		whHandler := handler.NewWarehouseHandler(whService)
+
+		enabledModules = append(enabledModules, whHandler)
+	}
+
+	// Register all enabled module routes
+	apiGroup := e.Group("/v1/api")
+
+	// Initialize AuthMiddleware from core with JWT secret and DB
+	authMiddleware := auth.NewAuthMiddleware(cfg.JwtSecret, cfg.AuthMode, dbInstance)
+	apiGroup.Use(authMiddleware.Middleware)
+	for _, mod := range enabledModules {
+		mod.RegisterRoutes(apiGroup)
+	}
+
 	e.Logger.Fatal(e.Start(":8080"))
 }

@@ -1,10 +1,12 @@
 package config
 
 import (
-	"log"
+	"errors"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -18,37 +20,56 @@ type Config struct {
 	JwtSecret   string
 	AuthExpired time.Duration
 	AuthMode    string
+	AppPort     string
 }
 
-// LoadConfig loads configuration from environment variables
-func LoadConfig() *Config {
-	port, err := strconv.Atoi(getEnv("DB_Port", "5432"))
+func LoadConfig() (*Config, error) {
+	// Load .env if available
+	_ = godotenv.Load()
+
+	dbPort, err := getEnvAsInt("DB_PORT", 5432)
 	if err != nil {
-		log.Fatalf("Invalid DB_Port: %v", err)
+		return nil, errors.New("invalid DB_PORT: " + err.Error())
 	}
 
-	expiredSec, err := strconv.Atoi(getEnv("Expired_Auth", "3000"))
+	authExpiredSec, err := getEnvAsInt("AUTH_EXPIRED", 3000)
 	if err != nil {
-		log.Fatalf("Invalid Expired_Auth: %v", err)
+		return nil, errors.New("invalid AUTH_EXPIRED: " + err.Error())
+	}
+
+	jwtSecret := getEnv("JWT_SECRET", "")
+	if jwtSecret == "" {
+		return nil, errors.New("JWT_SECRET must be set")
 	}
 
 	return &Config{
 		DBHost:      getEnv("DB_HOST", "localhost"),
-		DBName:      getEnv("DB_Name", "monorepo"),
-		DBUser:      getEnv("DB_User", "root"),
-		DBPassword:  getEnv("DB_Password", "password"),
-		DBPort:      port,
-		DBDriver:    getEnv("DB_Driver", "postgresql"),
-		DBTimeZone:  getEnv("DB_TimeZone", "Asia/Makassar"),
-		JwtSecret:   getEnv("JWT_SECRET", ""),
-		AuthExpired: time.Duration(expiredSec) * time.Second,
-		AuthMode:    getEnv("AUTH_MODE", ""),
-	}
+		DBName:      getEnv("DB_NAME", "monorepo"),
+		DBUser:      getEnv("DB_USER", "root"),
+		DBPassword:  getEnv("DB_PASSWORD", "password"),
+		DBPort:      dbPort,
+		DBDriver:    getEnv("DB_DRIVER", "postgresql"),
+		DBTimeZone:  getEnv("DB_TIMEZONE", "Asia/Makassar"),
+		JwtSecret:   jwtSecret,
+		AuthExpired: time.Duration(authExpiredSec) * time.Second,
+		AuthMode:    getEnv("AUTH_MODE", "jwt"),
+		AppPort:     getEnv("APP_PORT", "8080"),
+	}, nil
 }
 
+// getEnv returns the value of an environment variable or fallback
 func getEnv(key, fallback string) string {
-	if value := os.Getenv(key); value != "" {
+	if value, ok := os.LookupEnv(key); ok {
 		return value
 	}
 	return fallback
+}
+
+// getEnvAsInt converts an environment variable to int with fallback
+func getEnvAsInt(key string, fallback int) (int, error) {
+	valueStr := getEnv(key, "")
+	if valueStr == "" {
+		return fallback, nil
+	}
+	return strconv.Atoi(valueStr)
 }

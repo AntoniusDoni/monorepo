@@ -8,12 +8,20 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// AuthHandler handles user auth routes.
 type AuthHandler struct {
 	authService *service.AuthService
 }
 
 func NewAuthHandler(authService *service.AuthService) *AuthHandler {
 	return &AuthHandler{authService: authService}
+}
+
+// RegisterRoutes implements RouteRegistrar interface.
+// Registers routes under "/auths" group by default.
+func (h *AuthHandler) RegisterRoutes(g *echo.Group) {
+	g.POST("/register", h.Register)
+	g.POST("/login", h.Login)
 }
 
 func (h *AuthHandler) Register(c echo.Context) error {
@@ -31,6 +39,7 @@ func (h *AuthHandler) Register(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, contract.RegisterResponse{Message: "User registered successfully"})
 }
+
 func (h *AuthHandler) Login(c echo.Context) error {
 	req := new(contract.LoginRequest)
 	if err := c.Bind(req); err != nil {
@@ -47,5 +56,4 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	}
 
 	return contract.SuccessResponse(c, resp)
-
 }
