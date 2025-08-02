@@ -7,19 +7,37 @@ import (
 
 	"github.com/antoniusDoni/monorepo/config"
 	"github.com/antoniusDoni/monorepo/core"
+	_ "github.com/antoniusDoni/monorepo/docs"
+
 	auth "github.com/antoniusDoni/monorepo/core/auth"
+
 	dbpkg "github.com/antoniusDoni/monorepo/core/db"
+
 	Seeder "github.com/antoniusDoni/monorepo/core/db/seeder"
+
 	modules "github.com/antoniusDoni/monorepo/modules"
 	"github.com/antoniusDoni/monorepo/modules/warehouse/handler"
+
 	wrepo "github.com/antoniusDoni/monorepo/modules/warehouse/repository"
+
 	wservice "github.com/antoniusDoni/monorepo/modules/warehouse/service"
 	"github.com/antoniusDoni/monorepo/shared/repository"
 	"github.com/antoniusDoni/monorepo/shared/routes"
 	"github.com/antoniusDoni/monorepo/shared/service"
 	"github.com/labstack/echo/v4"
+
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
+// @title           Your Monorepo API
+// @version         1.0
+// @description     API documentation for your monorepo services
+// @host            localhost:8080
+// @BasePath        /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 func main() {
 	cfg, err := config.LoadConfig()
 	if err != nil {
@@ -35,7 +53,8 @@ func main() {
 
 	// Initialize shared repositories/services
 	userRepo := repository.NewUserRepository(dbInstance)
-	authService := service.NewAuthService(userRepo, cfg.JwtSecret)
+	officeRepo := wrepo.NewOfficeRepository(dbInstance)
+	authService := service.NewAuthService(userRepo, officeRepo, dbInstance, cfg.JwtSecret)
 
 	modCtx := modules.ModuleContext{
 		DB:          dbInstance,
@@ -65,7 +84,11 @@ func main() {
 		// Create handler with service
 		whHandler := handler.NewWarehouseHandler(whService)
 
-		enabledModules = append(enabledModules, whHandler)
+		// Create office service and handler
+		officeService := wservice.NewOfficeService(officeRepo)
+		officeHandler := handler.NewOfficeHandler(officeService)
+
+		enabledModules = append(enabledModules, whHandler, officeHandler)
 	}
 
 	// Register all enabled module routes
@@ -77,6 +100,6 @@ func main() {
 	for _, mod := range enabledModules {
 		mod.RegisterRoutes(apiGroup)
 	}
-
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.Logger.Fatal(e.Start(":8080"))
 }

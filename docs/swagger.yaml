@@ -1,0 +1,656 @@
+basePath: /
+definitions:
+  github_com_antoniusDoni_monorepo_modules_warehouse_model.Branch:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      code:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      office:
+        $ref: '#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Office'
+      office_id:
+        type: string
+      phone:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+      warehouses:
+        items:
+          $ref: '#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Warehouse'
+        type: array
+    type: object
+  github_com_antoniusDoni_monorepo_modules_warehouse_model.Office:
+    properties:
+      address:
+        type: string
+      branches:
+        items:
+          $ref: '#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Branch'
+        type: array
+      city:
+        type: string
+      code:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      status:
+        description: e.g., active, inactive
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_antoniusDoni_monorepo_modules_warehouse_model.Warehouse:
+    properties:
+      address:
+        type: string
+      branch_id:
+        description: nullable for now
+        type: string
+      code:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      office_id:
+        description: nullable for now
+        type: string
+      phone:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_antoniusDoni_monorepo_shared_contract.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  github_com_antoniusDoni_monorepo_shared_contract.LoginResponse:
+    properties:
+      role:
+        type: string
+      token:
+        type: string
+      user_identifier:
+        type: integer
+    type: object
+  github_com_antoniusDoni_monorepo_shared_contract.RegisterRequest:
+    properties:
+      email:
+        type: string
+      office_id:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      username:
+        maxLength: 50
+        minLength: 3
+        type: string
+    required:
+    - email
+    - office_id
+    - password
+    - username
+    type: object
+  github_com_antoniusDoni_monorepo_shared_contract.RegisterResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  github_com_antoniusDoni_monorepo_shared_contract.RegisterWithOfficeRequest:
+    properties:
+      email:
+        type: string
+      office_address:
+        type: string
+      office_city:
+        type: string
+      office_code:
+        description: Office fields
+        maxLength: 10
+        minLength: 2
+        type: string
+      office_name:
+        maxLength: 100
+        minLength: 3
+        type: string
+      office_phone:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      username:
+        description: User fields
+        maxLength: 50
+        minLength: 3
+        type: string
+    required:
+    - email
+    - office_code
+    - office_name
+    - password
+    - username
+    type: object
+  github_com_antoniusDoni_monorepo_shared_contract.RegisterWithOfficeResponse:
+    properties:
+      message:
+        type: string
+      office_id:
+        type: string
+      user_id:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API documentation for your monorepo services
+  title: Your Monorepo API
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return JWT token
+      parameters:
+      - description: Login request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_antoniusDoni_monorepo_shared_contract.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_antoniusDoni_monorepo_shared_contract.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+      summary: User login
+      tags:
+      - auth
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with an existing office ID
+      parameters:
+      - description: Registration request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_antoniusDoni_monorepo_shared_contract.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_antoniusDoni_monorepo_shared_contract.RegisterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+      summary: Register a new user
+      tags:
+      - auth
+  /register-with-office:
+    post:
+      consumes:
+      - application/json
+      description: Create a new office and register the first user for that office
+        in a single operation
+      parameters:
+      - description: Registration with office request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_antoniusDoni_monorepo_shared_contract.RegisterWithOfficeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_antoniusDoni_monorepo_shared_contract.RegisterWithOfficeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+      summary: Register a new user with office creation
+      tags:
+      - auth
+  /v1/api/offices:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves paginated offices optionally filtered by search term
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: pageSize
+        type: integer
+      - description: Search term
+        in: query
+        name: searchTerm
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of offices
+      tags:
+      - offices
+    post:
+      consumes:
+      - application/json
+      description: Create a new office with the provided information
+      parameters:
+      - description: Office data
+        in: body
+        name: office
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Office'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Office'
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new office
+      tags:
+      - offices
+  /v1/api/offices/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an office by its ID
+      parameters:
+      - description: Office ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete an office
+      tags:
+      - offices
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific office by its ID
+      parameters:
+      - description: Office ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Office'
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get office by ID
+      tags:
+      - offices
+    put:
+      consumes:
+      - application/json
+      description: Update an existing office with new information
+      parameters:
+      - description: Office ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated office data
+        in: body
+        name: office
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Office'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Office'
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update an office
+      tags:
+      - offices
+  /v1/api/offices/active:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all offices with active status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Office'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get active offices
+      tags:
+      - offices
+  /v1/api/warehouses:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves paginated warehouses optionally filtered by search term
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: pageSize
+        type: integer
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of warehouses
+      tags:
+      - warehouses
+    post:
+      consumes:
+      - application/json
+      description: Create a new warehouse with the provided information
+      parameters:
+      - description: Warehouse data
+        in: body
+        name: warehouse
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Warehouse'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Warehouse'
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new warehouse
+      tags:
+      - warehouses
+  /v1/api/warehouses/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a warehouse by its ID
+      parameters:
+      - description: Warehouse ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a warehouse
+      tags:
+      - warehouses
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific warehouse by its ID
+      parameters:
+      - description: Warehouse ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Warehouse'
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get warehouse by ID
+      tags:
+      - warehouses
+    put:
+      consumes:
+      - application/json
+      description: Update an existing warehouse with new information
+      parameters:
+      - description: Warehouse ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated warehouse data
+        in: body
+        name: warehouse
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Warehouse'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Warehouse'
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a warehouse
+      tags:
+      - warehouses
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

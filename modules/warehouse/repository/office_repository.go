@@ -8,7 +8,9 @@ import (
 
 type OfficeRepository interface {
 	GetAll(page, pageSize int, searchTerm string) ([]model.Office, int64, error)
+	GetActiveOffices() ([]model.Office, error)
 	GetByID(id string) (*model.Office, error)
+	GetByCode(code string) (*model.Office, error)
 	Create(office *model.Office) error
 	Update(office *model.Office) error
 	Delete(id string) error
@@ -62,6 +64,25 @@ func (r *officeRepository) GetByID(id string) (*model.Office, error) {
 		return nil, err
 	}
 	return &office, nil
+}
+
+func (r *officeRepository) GetByCode(code string) (*model.Office, error) {
+	var office model.Office
+	if err := r.db.First(&office, "code = ?", code).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &office, nil
+}
+
+func (r *officeRepository) GetActiveOffices() ([]model.Office, error) {
+	var offices []model.Office
+	if err := r.db.Where("status = ?", "active").Find(&offices).Error; err != nil {
+		return nil, err
+	}
+	return offices, nil
 }
 
 func (r *officeRepository) Create(office *model.Office) error {

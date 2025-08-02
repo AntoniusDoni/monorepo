@@ -9,6 +9,7 @@ import (
 
 type OfficeService interface {
 	GetAll(page, pageSize int, searchTerm string) ([]model.Office, int64, error)
+	GetActiveOffices() ([]model.Office, error)
 	GetByID(id string) (*model.Office, error)
 	Create(office *model.Office) error
 	Update(id string, office *model.Office) error
@@ -23,6 +24,10 @@ func NewOfficeService(repo repository.OfficeRepository) OfficeService {
 }
 func (s *officeService) GetAll(page, pageSize int, searchTerm string) ([]model.Office, int64, error) {
 	return s.repo.GetAll(page, pageSize, searchTerm)
+}
+
+func (s *officeService) GetActiveOffices() ([]model.Office, error) {
+	return s.repo.GetActiveOffices()
 }
 
 func (s *officeService) GetByID(id string) (*model.Office, error) {

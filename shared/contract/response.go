@@ -30,6 +30,12 @@ type LoginResponse struct {
 	Token  string `json:"token"`
 }
 
+type RegisterWithOfficeResponse struct {
+	Message  string `json:"message"`
+	OfficeID string `json:"office_id"`
+	UserID   uint   `json:"user_id"`
+}
+
 func ErrorResponse(c echo.Context, statusCode int, err error) error {
 	return c.JSON(statusCode, map[string]string{
 		"error": err.Error(),

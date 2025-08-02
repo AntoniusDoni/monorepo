@@ -27,7 +27,21 @@ func (h *WarehouseHandler) RegisterRoutes(g *echo.Group) {
 	wg.DELETE("/:id", h.Delete)
 }
 
-// GetAll fetches all warehouses
+// GetAll godoc
+// @Summary      Get list of warehouses
+// @Description  Retrieves paginated warehouses optionally filtered by search term
+// @Tags         warehouses
+// @Accept       json
+// @Produce      json
+// @Param        page      query     int     false  "Page number"
+// @Param        pageSize  query     int     false  "Page size"
+// @Param        search    query     string  false  "Search term"
+// @Success      200       {object}  object
+// @Failure      400       {object}  object
+// @Failure      401       {object}  object
+// @Failure      500       {object}  object
+// @Security     BearerAuth
+// @Router       /v1/api/warehouses [get]
 func (h *WarehouseHandler) GetAll(c echo.Context) error {
 	page, _ := strconv.Atoi(c.QueryParam("page"))
 	pageSize, _ := strconv.Atoi(c.QueryParam("pageSize"))
@@ -58,7 +72,19 @@ func (h *WarehouseHandler) GetAll(c echo.Context) error {
 	})
 }
 
-// Create adds a new warehouse
+// Create godoc
+// @Summary      Create a new warehouse
+// @Description  Create a new warehouse with the provided information
+// @Tags         warehouses
+// @Accept       json
+// @Produce      json
+// @Param        warehouse  body      model.Warehouse  true  "Warehouse data"
+// @Success      201        {object}  model.Warehouse
+// @Failure      400        {object}  object
+// @Failure      401        {object}  object
+// @Failure      500        {object}  object
+// @Security     BearerAuth
+// @Router       /v1/api/warehouses [post]
 func (h *WarehouseHandler) Create(c echo.Context) error {
 	var warehouse model.Warehouse
 	if err := c.Bind(&warehouse); err != nil {
@@ -81,6 +107,20 @@ func (h *WarehouseHandler) Create(c echo.Context) error {
 	})
 }
 
+// GetByID godoc
+// @Summary      Get warehouse by ID
+// @Description  Retrieve a specific warehouse by its ID
+// @Tags         warehouses
+// @Accept       json
+// @Produce      json
+// @Param        id   path      int  true  "Warehouse ID"
+// @Success      200  {object}  model.Warehouse
+// @Failure      400  {object}  object
+// @Failure      401  {object}  object
+// @Failure      404  {object}  object
+// @Failure      500  {object}  object
+// @Security     BearerAuth
+// @Router       /v1/api/warehouses/{id} [get]
 func (h *WarehouseHandler) GetByID(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil || id <= 0 {
@@ -109,6 +149,20 @@ func (h *WarehouseHandler) GetByID(c echo.Context) error {
 	})
 }
 
+// Update godoc
+// @Summary      Update a warehouse
+// @Description  Update an existing warehouse with new information
+// @Tags         warehouses
+// @Accept       json
+// @Produce      json
+// @Param        id         path      int              true  "Warehouse ID"
+// @Param        warehouse  body      model.Warehouse  true  "Updated warehouse data"
+// @Success      200        {object}  model.Warehouse
+// @Failure      400        {object}  object
+// @Failure      401        {object}  object
+// @Failure      500        {object}  object
+// @Security     BearerAuth
+// @Router       /v1/api/warehouses/{id} [put]
 func (h *WarehouseHandler) Update(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil || id <= 0 {
@@ -139,6 +193,19 @@ func (h *WarehouseHandler) Update(c echo.Context) error {
 	})
 }
 
+// Delete godoc
+// @Summary      Delete a warehouse
+// @Description  Delete a warehouse by its ID
+// @Tags         warehouses
+// @Accept       json
+// @Produce      json
+// @Param        id  path      int  true  "Warehouse ID"
+// @Success      204 {object}  object
+// @Failure      400 {object}  object
+// @Failure      401 {object}  object
+// @Failure      500 {object}  object
+// @Security     BearerAuth
+// @Router       /v1/api/warehouses/{id} [delete]
 func (h *WarehouseHandler) Delete(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil || id <= 0 {

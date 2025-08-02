@@ -14,9 +14,25 @@ type ListRequest struct {
 type RegisterRequest struct {
 	Username string `json:"username" validate:"required,min=3,max=50"`
 	Password string `json:"password" validate:"required,min=6"`
+	Email    string `json:"email" validate:"required,email"`
+	OfficeID string `json:"office_id" validate:"required,uuid"`
 }
 
 type LoginRequest struct {
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password" validate:"required"`
+}
+
+type RegisterWithOfficeRequest struct {
+	// User fields
+	Username string `json:"username" validate:"required,min=3,max=50"`
+	Password string `json:"password" validate:"required,min=6"`
+	Email    string `json:"email" validate:"required,email"`
+	
+	// Office fields
+	OfficeCode    string `json:"office_code" validate:"required,min=2,max=10"`
+	OfficeName    string `json:"office_name" validate:"required,min=3,max=100"`
+	OfficeAddress string `json:"office_address"`
+	OfficeCity    string `json:"office_city"`
+	OfficePhone   string `json:"office_phone"`
 }

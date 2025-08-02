@@ -13,5 +13,6 @@ func Register(e *echo.Echo, authService *service.AuthService, db *gorm.DB, jwtSe
 
 	// Public routes
 	e.POST("/register", authHandler.Register)
+	e.POST("/register-office", authHandler.RegisterWithOffice)
 	e.POST("/login", authHandler.Login)
 }
