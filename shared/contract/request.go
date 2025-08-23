@@ -19,8 +19,8 @@ type RegisterRequest struct {
 }
 
 type LoginRequest struct {
-	Username string `json:"username" validate:"required"`
-	Password string `json:"password" validate:"required"`
+	Username string `json:"username" validate:"required" example:"superadmin"`
+	Password string `json:"password" validate:"required" example:"securepassword123"`
 }
 
 type RegisterWithOfficeRequest struct {
@@ -28,7 +28,7 @@ type RegisterWithOfficeRequest struct {
 	Username string `json:"username" validate:"required,min=3,max=50"`
 	Password string `json:"password" validate:"required,min=6"`
 	Email    string `json:"email" validate:"required,email"`
-	
+
 	// Office fields
 	OfficeCode    string `json:"office_code" validate:"required,min=2,max=10"`
 	OfficeName    string `json:"office_name" validate:"required,min=3,max=100"`

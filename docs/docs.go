@@ -15,6 +15,69 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/admin/health": {
+            "get": {
+                "description": "Returns the health status of the application",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Health check endpoint",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/seed": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Executes the database seeder to populate initial data including sample warehouses, products, and unit products",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Run database seeder",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
                 "description": "Authenticate user and return JWT token",
@@ -35,7 +98,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_antoniusDoni_monorepo_shared_contract.LoginRequest"
+                            "$ref": "#/definitions/contract.LoginRequest"
                         }
                     }
                 ],
@@ -43,7 +106,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_antoniusDoni_monorepo_shared_contract.LoginResponse"
+                            "$ref": "#/definitions/contract.LoginResponse"
                         }
                     },
                     "400": {
@@ -81,7 +144,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_antoniusDoni_monorepo_shared_contract.RegisterRequest"
+                            "$ref": "#/definitions/contract.RegisterRequest"
                         }
                     }
                 ],
@@ -89,7 +152,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_antoniusDoni_monorepo_shared_contract.RegisterResponse"
+                            "$ref": "#/definitions/contract.RegisterResponse"
                         }
                     },
                     "400": {
@@ -121,7 +184,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_antoniusDoni_monorepo_shared_contract.RegisterWithOfficeRequest"
+                            "$ref": "#/definitions/contract.RegisterWithOfficeRequest"
                         }
                     }
                 ],
@@ -129,11 +192,491 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_antoniusDoni_monorepo_shared_contract.RegisterWithOfficeResponse"
+                            "$ref": "#/definitions/contract.RegisterWithOfficeResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/api/category-products": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves paginated category products optionally filtered by search term",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "category-products"
+                ],
+                "summary": "Get list of category products",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size (default: 10, max: 100)",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term to filter categories by name",
+                        "name": "searchTerm",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new category product with the provided information. Can be a root category or child category.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "category-products"
+                ],
+                "summary": "Create a new category product",
+                "parameters": [
+                    {
+                        "description": "Category Product data",
+                        "name": "categoryProduct",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CategoryProductCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/model.CategoryProduct"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/api/category-products/parent/{parentId}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve all child categories of a specific parent category",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "category-products"
+                ],
+                "summary": "Get categories by parent ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Parent Category ID (UUID format)",
+                        "name": "parentId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.CategoryProduct"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/api/category-products/root": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve all root categories (categories without parent)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "category-products"
+                ],
+                "summary": "Get root categories",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.CategoryProduct"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/api/category-products/tree": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve all categories organized in a hierarchical tree structure",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "category-products"
+                ],
+                "summary": "Get category tree structure",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.CategoryProduct"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/api/category-products/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve a specific category product by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "category-products"
+                ],
+                "summary": "Get category product by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Category Product ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.CategoryProduct"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update an existing category product with new information. Validates parent-child relationships and prevents circular references.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "category-products"
+                ],
+                "summary": "Update a category product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Category Product ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated category product data",
+                        "name": "categoryProduct",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CategoryProduct"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.CategoryProduct"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a category product by its ID. Cannot delete categories that have child categories.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "category-products"
+                ],
+                "summary": "Delete a category product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Category Product ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object"
                         }
@@ -224,7 +767,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Office"
+                            "$ref": "#/definitions/model.Office"
                         }
                     }
                 ],
@@ -232,7 +775,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Office"
+                            "$ref": "#/definitions/model.Office"
                         }
                     },
                     "400": {
@@ -280,7 +823,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Office"
+                                "$ref": "#/definitions/model.Office"
                             }
                         }
                     },
@@ -330,7 +873,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Office"
+                            "$ref": "#/definitions/model.Office"
                         }
                     },
                     "401": {
@@ -378,7 +921,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Office"
+                            "$ref": "#/definitions/model.Office"
                         }
                     }
                 ],
@@ -386,7 +929,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Office"
+                            "$ref": "#/definitions/model.Office"
                         }
                     },
                     "400": {
@@ -438,6 +981,662 @@ const docTemplate = `{
                 "responses": {
                     "204": {
                         "description": "No Content",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/api/products": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves paginated products optionally filtered by search term",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Get list of products",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size (default: 10)",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term to filter products by name or description",
+                        "name": "searchTerm",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new product with the provided information. Category must exist and be valid. Request body should only contain category_id, not the full category object.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Create a new product",
+                "parameters": [
+                    {
+                        "description": "Product data",
+                        "name": "product",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ProductCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Product created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/model.Product"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error (invalid input or category not found)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/api/products/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve a specific product by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Get product by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Product ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Product"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update an existing product with new information. Category must exist and be valid. Request body should only contain category_id, not the full category object.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Update a product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Product ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated product data",
+                        "name": "product",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ProductUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/model.Product"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error (invalid input or category not found)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a product by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Delete a product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Product ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/api/unit-products": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves paginated unit products optionally filtered by search term",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unit-products"
+                ],
+                "summary": "Get list of unit products",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size (default: 10)",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term to filter unit products by name",
+                        "name": "searchTerm",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new unit product with the provided information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unit-products"
+                ],
+                "summary": "Create a new unit product",
+                "parameters": [
+                    {
+                        "description": "Unit Product data",
+                        "name": "unitProduct",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UnitProduct"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/model.UnitProduct"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/api/unit-products/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve a specific unit product by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unit-products"
+                ],
+                "summary": "Get unit product by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Unit Product ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.UnitProduct"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update an existing unit product with new information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unit-products"
+                ],
+                "summary": "Update a unit product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Unit Product ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated unit product data",
+                        "name": "unitProduct",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UnitProduct"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.UnitProduct"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a unit product by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unit-products"
+                ],
+                "summary": "Delete a unit product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Unit Product ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "type": "object"
                         }
@@ -546,7 +1745,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Warehouse"
+                            "$ref": "#/definitions/model.Warehouse"
                         }
                     }
                 ],
@@ -554,7 +1753,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Warehouse"
+                            "$ref": "#/definitions/model.Warehouse"
                         }
                     },
                     "400": {
@@ -609,7 +1808,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Warehouse"
+                            "$ref": "#/definitions/model.Warehouse"
                         }
                     },
                     "400": {
@@ -669,7 +1868,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Warehouse"
+                            "$ref": "#/definitions/model.Warehouse"
                         }
                     }
                 ],
@@ -677,7 +1876,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Warehouse"
+                            "$ref": "#/definitions/model.Warehouse"
                         }
                     },
                     "400": {
@@ -756,127 +1955,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_antoniusDoni_monorepo_modules_warehouse_model.Branch": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "office": {
-                    "$ref": "#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Office"
-                },
-                "office_id": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "warehouses": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Warehouse"
-                    }
-                }
-            }
-        },
-        "github_com_antoniusDoni_monorepo_modules_warehouse_model.Office": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "branches": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_antoniusDoni_monorepo_modules_warehouse_model.Branch"
-                    }
-                },
-                "city": {
-                    "type": "string"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "status": {
-                    "description": "e.g., active, inactive",
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_antoniusDoni_monorepo_modules_warehouse_model.Warehouse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "branch_id": {
-                    "description": "nullable for now",
-                    "type": "string"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "office_id": {
-                    "description": "nullable for now",
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_antoniusDoni_monorepo_shared_contract.LoginRequest": {
+        "contract.LoginRequest": {
             "type": "object",
             "required": [
                 "password",
@@ -884,14 +1963,16 @@ const docTemplate = `{
             ],
             "properties": {
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "securepassword123"
                 },
                 "username": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "superadmin"
                 }
             }
         },
-        "github_com_antoniusDoni_monorepo_shared_contract.LoginResponse": {
+        "contract.LoginResponse": {
             "type": "object",
             "properties": {
                 "role": {
@@ -905,7 +1986,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_antoniusDoni_monorepo_shared_contract.RegisterRequest": {
+        "contract.RegisterRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -931,7 +2012,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_antoniusDoni_monorepo_shared_contract.RegisterResponse": {
+        "contract.RegisterResponse": {
             "type": "object",
             "properties": {
                 "message": {
@@ -939,7 +2020,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_antoniusDoni_monorepo_shared_contract.RegisterWithOfficeRequest": {
+        "contract.RegisterWithOfficeRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -984,7 +2065,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_antoniusDoni_monorepo_shared_contract.RegisterWithOfficeResponse": {
+        "contract.RegisterWithOfficeResponse": {
             "type": "object",
             "properties": {
                 "message": {
@@ -995,6 +2076,377 @@ const docTemplate = `{
                 },
                 "user_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.CategoryProductCreateRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "parent_id"
+            ],
+            "properties": {
+                "name": {
+                    "description": "Category name",
+                    "type": "string",
+                    "example": "Precursor"
+                },
+                "parent_id": {
+                    "description": "example:\"123e4567-e89b-12d3-a456-426614174000\"",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                }
+            }
+        },
+        "dto.ProductCreateRequest": {
+            "type": "object",
+            "required": [
+                "category_id",
+                "code",
+                "content_per_large_unit",
+                "large_unit",
+                "name",
+                "purchase_price",
+                "selling_price",
+                "small_unit"
+            ],
+            "properties": {
+                "category_id": {
+                    "description": "Foreign key to category",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "code": {
+                    "description": "Product code or SKU",
+                    "type": "string",
+                    "example": "PROD001"
+                },
+                "content_per_large_unit": {
+                    "description": "e.g., 12 pieces per box",
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 12
+                },
+                "indication": {
+                    "description": "Description or usage",
+                    "type": "string",
+                    "example": "High-performance laptop for professionals"
+                },
+                "large_unit": {
+                    "description": "e.g., box, pack",
+                    "type": "string",
+                    "example": "box"
+                },
+                "name": {
+                    "description": "Product name",
+                    "type": "string",
+                    "example": "Laptop Dell XPS 13"
+                },
+                "purchase_price": {
+                    "description": "Cost price",
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 500
+                },
+                "selling_price": {
+                    "description": "Sale price",
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 750
+                },
+                "small_unit": {
+                    "description": "e.g., piece, tablet",
+                    "type": "string",
+                    "example": "piece"
+                }
+            }
+        },
+        "dto.ProductUpdateRequest": {
+            "type": "object",
+            "required": [
+                "category_id",
+                "code",
+                "content_per_large_unit",
+                "large_unit",
+                "name",
+                "purchase_price",
+                "selling_price",
+                "small_unit"
+            ],
+            "properties": {
+                "category_id": {
+                    "description": "Foreign key to category",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "code": {
+                    "description": "Product code or SKU",
+                    "type": "string",
+                    "example": "PROD001"
+                },
+                "content_per_large_unit": {
+                    "description": "e.g., 12 pieces per box",
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 12
+                },
+                "indication": {
+                    "description": "Description or usage",
+                    "type": "string",
+                    "example": "High-performance laptop for professionals"
+                },
+                "large_unit": {
+                    "description": "e.g., box, pack",
+                    "type": "string",
+                    "example": "box"
+                },
+                "name": {
+                    "description": "Product name",
+                    "type": "string",
+                    "example": "Laptop Dell XPS 13"
+                },
+                "purchase_price": {
+                    "description": "Cost price",
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 500
+                },
+                "selling_price": {
+                    "description": "Sale price",
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 750
+                },
+                "small_unit": {
+                    "description": "e.g., piece, tablet",
+                    "type": "string",
+                    "example": "piece"
+                }
+            }
+        },
+        "model.Branch": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "office": {
+                    "$ref": "#/definitions/model.Office"
+                },
+                "office_id": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "warehouses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Warehouse"
+                    }
+                }
+            }
+        },
+        "model.CategoryProduct": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "Timestamp when created",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Unique identifier",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Category name",
+                    "type": "string"
+                },
+                "parent_id": {
+                    "description": "Parent category ID",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "Timestamp when updated",
+                    "type": "string"
+                }
+            }
+        },
+        "model.Office": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "branches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Branch"
+                    }
+                },
+                "city": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "e.g., active, inactive",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Product": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "$ref": "#/definitions/model.CategoryProduct"
+                },
+                "category_id": {
+                    "description": "Foreign key",
+                    "type": "string"
+                },
+                "code": {
+                    "description": "Product code or SKU",
+                    "type": "string"
+                },
+                "content_per_large_unit": {
+                    "description": "e.g., 12 pieces per box",
+                    "type": "integer"
+                },
+                "created_at": {
+                    "description": "Timestamp when created",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Unique identifier",
+                    "type": "string"
+                },
+                "indication": {
+                    "description": "Description or usage",
+                    "type": "string"
+                },
+                "large_unit": {
+                    "description": "e.g., box, pack",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Product name",
+                    "type": "string"
+                },
+                "purchase_price": {
+                    "description": "Cost price",
+                    "type": "number"
+                },
+                "selling_price": {
+                    "description": "Sale price",
+                    "type": "number"
+                },
+                "small_unit": {
+                    "description": "e.g., piece, tablet",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "Timestamp when updated",
+                    "type": "string"
+                }
+            }
+        },
+        "model.UnitProduct": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "Product code or SKU",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "Timestamp when created",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Unique identifier",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Product name",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "Timestamp when updated",
+                    "type": "string"
+                }
+            }
+        },
+        "model.Warehouse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "branch_id": {
+                    "description": "nullable for now",
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "office_id": {
+                    "description": "nullable for now",
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         }
@@ -1012,7 +2464,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Your Monorepo API",

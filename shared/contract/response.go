@@ -36,6 +36,12 @@ type RegisterWithOfficeResponse struct {
 	UserID   uint   `json:"user_id"`
 }
 
+type OfficeResponse struct {
+	OfficeCode string `json:"officeCode"`
+	Name       string `json:"name"`
+	Address    string `json:"address"`
+}
+
 func ErrorResponse(c echo.Context, statusCode int, err error) error {
 	return c.JSON(statusCode, map[string]string{
 		"error": err.Error(),

@@ -217,3 +217,7 @@ func (s *AuthService) assignAdminRole(userID uint) error {
 func (s *AuthService) GetUser(id uint) (*model.User, error) {
 	return s.repo.FindByID(id)
 }
+
+func (s *AuthService) GetListOffice(page, pageSize int, searchTerm string) ([]warehouseModel.Office, int64, error) {
+	return s.officeRepo.GetAll(page, pageSize, searchTerm)
+}

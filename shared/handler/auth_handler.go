@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/antoniusDoni/monorepo/shared/contract"
 	"github.com/antoniusDoni/monorepo/shared/service"
@@ -23,6 +24,7 @@ func (h *AuthHandler) RegisterRoutes(g *echo.Group) {
 	g.POST("/register", h.Register)
 	g.POST("/register-with-office", h.RegisterWithOffice)
 	g.POST("/login", h.Login)
+	g.GET("/getOffices", h.GetOfficeAll)
 }
 
 // Register godoc
@@ -105,4 +107,56 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	}
 
 	return contract.SuccessResponse(c, resp)
+}
+
+// GetAll godoc
+// @Summary      Get list of offices
+// @Description  Retrieves paginated offices optionally filtered by search term
+// @Tags         offices
+// @Accept       json
+// @Produce      json
+// @Param        page       query     int     false  "Page number"
+// @Param        pageSize   query     int     false  "Page size"
+// @Param        searchTerm query     string  false  "Search term"
+// @Success      200        {object}  object
+// @Failure      401        {object}  object
+// @Failure      500        {object}  object
+// @Security     BearerAuth
+// @Router       /v1/api/offices [get]
+func (h *AuthHandler) GetOfficeAll(c echo.Context) error {
+	page, _ := strconv.Atoi(c.QueryParam("page"))
+	pageSize, _ := strconv.Atoi(c.QueryParam("pageSize"))
+	searchTerm := c.QueryParam("searchTerm")
+
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
+
+	offices, total, err := h.authService.GetListOffice(page, pageSize, searchTerm)
+	if err != nil {
+		return contract.ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	var officeData []contract.OfficeResponse
+	for _, o := range offices {
+		officeData = append(officeData, contract.OfficeResponse{
+			OfficeCode: o.Code,
+			Name:       o.Name,
+			Address:    o.Address,
+		})
+	}
+	resp := contract.PaginatedResponse[contract.OfficeResponse]{ // <-- FIXED HERE
+		Items:      officeData,
+		TotalCount: total,
+		Page:       page,
+		PageSize:   pageSize,
+	}
+
+	return c.JSON(http.StatusOK, contract.APIResponse[contract.PaginatedResponse[contract.OfficeResponse]]{
+		Success: true,
+		Data:    resp,
+	})
 }
